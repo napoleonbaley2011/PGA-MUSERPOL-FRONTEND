@@ -64,7 +64,6 @@ export const useReportKardexStore = () => {
                 responseType: 'arraybuffer',
             });
 
-            // Llamar a la función para descargar el archivo Excel
             downloadDocument(response, `report_kardex_${endDate}.xlsx`);
             return true;
         } catch (error) {

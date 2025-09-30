@@ -281,13 +281,13 @@ export const ValuedPhysicalConsolided = () => {
                             </TableRow>
                             <TableRow>
                                 <StyledTableCell>FISICO</StyledTableCell>
-                                <StyledTableCell>VALOR BS.</StyledTableCell>
+                                <StyledTableCell>VALOR bs</StyledTableCell>
                                 <StyledTableCell>FISICO</StyledTableCell>
-                                <StyledTableCell>VALOR BS.</StyledTableCell>
+                                <StyledTableCell>VALOR bs</StyledTableCell>
                                 <StyledTableCell>FISICO</StyledTableCell>
-                                <StyledTableCell>VALOR BS.</StyledTableCell>
+                                <StyledTableCell>VALOR bs</StyledTableCell>
                                 <StyledTableCell>FISICO</StyledTableCell>
-                                <StyledTableCell>VALOR BS.</StyledTableCell>
+                                <StyledTableCell>VALOR bs</StyledTableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

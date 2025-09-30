@@ -6,6 +6,10 @@ import {
 } from './StyledComponents';
 
 export const ValuedTableGroup = ({ item }: { item: any }) => {
+
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    const lastDayLastYear = `31/12/${lastYear}`;
     return (
         <TableContainer>
             <Typography sx={{ padding: '10px', fontSize: '0.9rem' }}>
@@ -21,7 +25,7 @@ export const ValuedTableGroup = ({ item }: { item: any }) => {
                         <StyledHeaderCell rowSpan={2}>CÓDIGO</StyledHeaderCell>
                         <StyledHeaderCell rowSpan={2}>DESCRIPCIÓN</StyledHeaderCell>
                         <StyledHeaderCell rowSpan={2}>UNIDAD</StyledHeaderCell>
-                        <StyledHeaderCell colSpan={3}>SALDO INICIAL AL 31/12/2024</StyledHeaderCell>
+                        <StyledHeaderCell colSpan={3}>SALDO INICIAL AL {lastDayLastYear}</StyledHeaderCell>
                         <StyledHeaderCell colSpan={3}>ENTRADAS</StyledHeaderCell>
                         <StyledHeaderCell colSpan={3}>SALIDAS</StyledHeaderCell>
                         <StyledHeaderCell colSpan={3}>SALDO</StyledHeaderCell>
@@ -74,7 +78,6 @@ export const ValuedTableGroup = ({ item }: { item: any }) => {
                                         </>
                                     )}
 
-                                    {/* SALDO ANTERIOR GESTIÓN */}
                                     <StyledBodyCell align="center">
                                         {saldo.cantidad_restante !== 0 ? saldo.cantidad_restante : ""}
                                     </StyledBodyCell>
@@ -85,19 +88,16 @@ export const ValuedTableGroup = ({ item }: { item: any }) => {
                                         {saldo.valor_restante ? parseFloat(saldo.valor_restante).toFixed(2) : ""}
                                     </StyledBodyCell>
 
-                                    {/* ENTRADAS */}
                                     <StyledBodyCell align="center">{lote.cantidad_inicial}</StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.precio_unitario.toFixed(2)}</StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.cantidad_1.toFixed(2)}</StyledBodyCell>
 
-                                    {/* SALIDAS */}
                                     <StyledBodyCell align="center">
                                         {(lote.cantidad_inicial - lote.cantidad_restante)}
                                     </StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.precio_unitario.toFixed(2)}</StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.cantidad_2.toFixed(2)}</StyledBodyCell>
 
-                                    {/* SALDO FINAL */}
                                     <StyledBodyCell align="center">{lote.cantidad_restante}</StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.precio_unitario.toFixed(2)}</StyledBodyCell>
                                     <StyledBodyCell align="right">{lote.cantidad_3.toFixed(2)}</StyledBodyCell>
@@ -106,15 +106,14 @@ export const ValuedTableGroup = ({ item }: { item: any }) => {
                         });
                     })}
 
-                    {/* FOOTER CON RESUMEN DEL BACKEND */}
                     <StyledTableRow>
                         <StyledFooterCell colSpan={3}>TOTAL EN BS</StyledFooterCell>
                         <StyledFooterCell align="right">{item.resumen?.saldo_anterior_cantidad ?? ""}</StyledFooterCell>
-                        <StyledFooterCell /> {/* celda vacía para precio promedio */}
+                        <StyledFooterCell /> { }
                         <StyledFooterCell align="right">{item.resumen?.saldo_anterior_total?.toFixed(2) ?? ""}</StyledFooterCell>
 
                         <StyledFooterCell align="right">{(item.resumen?.entradas_cantidad - item.resumen?.saldo_anterior_cantidad)}</StyledFooterCell>
-                        <StyledFooterCell /> {/* celda vacía para precio promedio */}
+                        <StyledFooterCell /> { }
                         <StyledFooterCell align="right">{(item.resumen?.entradas_total - item.resumen?.saldo_anterior_total).toFixed(2)}</StyledFooterCell>
 
                         <StyledFooterCell align="right">{item.resumen?.salidas_cantidad ?? ""}</StyledFooterCell>

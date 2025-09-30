@@ -68,6 +68,12 @@ const formatNumber = (num: number | undefined) => {
 export const TableExistence = (props: TableProps) => {
     const { itemKardex } = props;
 
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    const lastDayLastYear = `31/12/${lastYear}`;
+
+    const DayYear = `01/01/${currentYear}`;
+
     if (!itemKardex || !itemKardex.kardex_de_existencia) {
         return (
             <StyledContainer>
@@ -77,9 +83,6 @@ export const TableExistence = (props: TableProps) => {
             </StyledContainer>
         );
     }
-
-    console.log(itemKardex);
-
 
     return (
         <StyledContainer>
@@ -137,8 +140,8 @@ export const TableExistence = (props: TableProps) => {
                     <TableBody>
 
                         <StyledTableRow>
-                            <StyledBodyCell align="left">2025-01-01</StyledBodyCell>
-                            <StyledBodyCell align="left">Saldo al 31/12/2024</StyledBodyCell>
+                            <StyledBodyCell align="left">{DayYear}</StyledBodyCell>
+                            <StyledBodyCell align="left">Saldo al {lastDayLastYear}</StyledBodyCell>
                             <StyledBodyCell align="center">{itemKardex.balance_amount_entries}</StyledBodyCell>
                             <StyledBodyCell align="left"></StyledBodyCell>
                             <StyledBodyCell align="left"></StyledBodyCell>

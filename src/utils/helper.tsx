@@ -34,7 +34,7 @@ export const downloadDocument = (res: any, filename: string) => {
     } else if (contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
         blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     } else {
-        return;  // Si el tipo de contenido no es ni PDF ni Excel, no hacer nada
+        return; 
     }
 
     const link = document.createElement('a');
