@@ -15,3 +15,4 @@ export * from './MainCard';
 export * from './AnalyticCardPetty';
 export * from './DevBar';
 export * from './SelectMaterialComponet';
+export * from './GroupSelect';

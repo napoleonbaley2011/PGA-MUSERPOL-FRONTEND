@@ -1,26 +1,27 @@
 import {
     Grid, Typography, Table, TableBody, TableCell, TableRow, TableContainer, Paper,
-    IconButton, TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-    InputLabel, Select, MenuItem
+    TextField, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+    Stack,
+    Tooltip,
+    Menu,
+    MenuItem
 } from "@mui/material";
-import PrintIcon from "@mui/icons-material/Print";
-import DownloadIcon from "@mui/icons-material/Download";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 import AnalyticCardPetty from "../../../components/AnalyticCardPetty";
 import { usePettyCash } from "../../../hooks/usePettyCash";
 import { useEffect, useState } from "react";
+import { TablePettyCash } from "./TablePettyCash";
 
 export const PettyCash = () => {
-    const { petty_cashes, getDataPettyCash, PrintDiaryBook, DownloadDiaryBook, PaymentOrder, CreateDischarge } = usePettyCash();
-    type DateFields = "libroDiario" | "planillaRendicion" | "descargoGeneral";
-
-    const [selectedManagement, setSelectedManagement] = useState('');
-    const [isPaymentOrderCompleted, setIsPaymentOrderCompleted] = useState(false); // Nuevo estado para seguimiento de la orden de pago
+    const { petty_cashes, getDataPettyCash, CreateDischarge } = usePettyCash();
     const [openDialog, setOpenDialog] = useState(false);
     const [openConfirmationDialog, setOpenConfirmationDialog] = useState(false);
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [dialogValues, setDialogValues] = useState({
         balance: "",
         responsible: "",
-        username:""
+        username: ""
     });
 
     useEffect(() => {
@@ -33,35 +34,7 @@ export const PettyCash = () => {
 
     const { date_recived, name_responsibility, concept, amount, balance, total } = petty_cashes.dataPettyCash;
 
-    const handleSaveDate = (field: DateFields) => {
-        if (selectedManagement) {
-            PrintDiaryBook(field, selectedManagement);
-        }
-    };
-
-    const handleDownload = (field: DateFields) => {
-        if (selectedManagement) {
-            DownloadDiaryBook(field, selectedManagement);
-        }
-    };
-
-    const handleOpenDialog = () => {
-        setDialogValues({
-            balance: balance,
-            responsible: name_responsibility,
-            username: ""
-        });
-        setOpenDialog(true);
-    };
-
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-    };
-
-    const sentPaymentOrder = () => {
-        PaymentOrder(petty_cashes.dataPettyCash.total, petty_cashes.dataPettyCash.name_responsibility);
-        setIsPaymentOrderCompleted(true); // Marca la orden de pago como completada
-    };
+    const handleCloseDialog = () => setOpenDialog(false);
 
     const handleDialogChange = (field: keyof typeof dialogValues, value: string) => {
         setDialogValues((prevValues) => ({ ...prevValues, [field]: value }));
@@ -72,9 +45,7 @@ export const PettyCash = () => {
         setOpenConfirmationDialog(true);
     };
 
-    const handleCloseConfirmationDialog = () => {
-        setOpenConfirmationDialog(false);
-    };
+    const handleCloseConfirmationDialog = () => setOpenConfirmationDialog(false);
 
     const handleFinalConfirm = async () => {
         await CreateDischarge(dialogValues.balance, dialogValues.responsible, dialogValues.username).then((res) => {
@@ -84,8 +55,18 @@ export const PettyCash = () => {
         });
     };
 
-    const handleManagementChange = (event: any) => {
-        setSelectedManagement(event.target.value);
+    const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+    };
+
+    const handleSelectReport = (reportType: string) => {
+        console.log("Seleccionaste:", reportType);
+        
+        setAnchorEl(null);
     };
 
     return (
@@ -95,21 +76,63 @@ export const PettyCash = () => {
                     <Typography variant="h5">{concept}</Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell><Typography variant="subtitle1">Fecha de Recepción</Typography></TableCell>
-                                    <TableCell><Typography variant="body1">{date_recived}</Typography></TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell><Typography variant="subtitle1">Responsable</Typography></TableCell>
-                                    <TableCell><Typography variant="body1">{name_responsibility}</Typography></TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <Paper>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2, pb: 0 }}>
+                            <Typography variant="h6">Datos de Caja Chica</Typography>
+                            <Stack direction="row" spacing={1}>
+                                <Tooltip title="Editar cabecera">
+                                    <Button variant="contained" startIcon={<EditIcon />}>
+                                        Editar
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip title="Adicionar dinero">
+                                    <Button variant="contained" startIcon={<AddIcon />}>
+                                        Adicionar dinero
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip title="Seleccionar el reporte">
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleOpenMenu}
+                                    >
+                                        Reportes
+                                    </Button>
+                                </Tooltip>
+                                <Menu
+                                    anchorEl={anchorEl}
+                                    open={Boolean(anchorEl)}
+                                    onClose={handleCloseMenu}
+                                >
+                                    <MenuItem onClick={() => handleSelectReport("libro-diario")}>
+                                        Libro Diario
+                                    </MenuItem>
+                                    <MenuItem onClick={() => handleSelectReport("planilla-rendicion")}>
+                                        Planilla de Rendición de Cuentas
+                                    </MenuItem>
+                                    <MenuItem onClick={() => handleSelectReport("orden-pago")}>
+                                        Orden de Pago
+                                    </MenuItem>
+                                </Menu>
+                            </Stack>
+                        </Stack>
+
+                        <TableContainer component={Paper} elevation={0}>
+                            <Table>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell><Typography variant="subtitle1">Fecha de Recepción</Typography></TableCell>
+                                        <TableCell><Typography variant="body1">{date_recived}</Typography></TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell><Typography variant="subtitle1">Responsable</Typography></TableCell>
+                                        <TableCell><Typography variant="body1">{name_responsibility}</Typography></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Paper>
                 </Grid>
+
                 <Grid item xs={12} sm={6} md={4} lg={4}>
                     <AnalyticCardPetty title="Saldo Inicial de Caja Chica" count={amount} extra={'2'} />
                 </Grid>
@@ -120,110 +143,13 @@ export const PettyCash = () => {
                     <AnalyticCardPetty title="Saldo Final de Caja Chica" count={balance} extra={'2'} />
                 </Grid>
                 <Grid item xs={12} sx={{ mb: -2.25 }}>
-                    <Typography variant="h5">ACCIONES</Typography>
+                    <Typography variant="h5">SOLICITUDES</Typography>
                 </Grid>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Libro Diario</TableCell>
-                                    <TableCell>
-                                        <InputLabel id="management-select-label">Seleccionar Gestión</InputLabel>
-                                        <Select
-                                            labelId="management-select-label"
-                                            value={selectedManagement}
-                                            onChange={handleManagementChange}
-                                            label="Seleccionar Gestión"
-                                        >
-                                            {petty_cashes.discharges?.map((management: any) => (
-                                                <MenuItem key={management.id} value={management.id}>
-                                                    {management.id} - {management.received_amount} Bs.
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() => handleSaveDate("libroDiario")}
-                                            disabled={!selectedManagement} // Deshabilita si no hay gestión seleccionada
-                                        >
-                                            <PrintIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            color="info"
-                                            onClick={() => handleDownload("libroDiario")}
-                                            disabled={!selectedManagement} // Deshabilita si no hay gestión seleccionada
-                                        >
-                                            <DownloadIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell>Planilla rendición de cuentas</TableCell>
-                                    <TableCell>
-                                        <InputLabel id="management-select-label">Seleccionar Gestión</InputLabel>
-                                        <Select
-                                            labelId="management-select-label"
-                                            value={selectedManagement}
-                                            onChange={handleManagementChange}
-                                            label="Seleccionar Gestión"
-                                        >
-                                            {petty_cashes.discharges?.map((management: any) => (
-                                                <MenuItem key={management.id} value={management.id}>
-                                                    {management.id} - {management.received_amount} Bs.
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            color="primary"
-                                            onClick={() => handleSaveDate("planillaRendicion")}
-                                            disabled={!selectedManagement} 
-                                        >
-                                            <PrintIcon />
-                                        </IconButton>
-                                        <IconButton
-                                            color="info"
-                                            onClick={() => handleDownload("planillaRendicion")}
-                                            disabled={!selectedManagement} 
-                                        >
-                                            <DownloadIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell>Realizar el descargo</TableCell>
-                                    <TableCell>
-                                        <Typography variant="body1">Generará el descargo general</Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={sentPaymentOrder}
-                                        >
-                                            Orden de Pago
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            color="primary"
-                                            onClick={handleOpenDialog}
-                                            disabled={!isPaymentOrderCompleted} 
-                                        >
-                                            Descargo General
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <TablePettyCash />
                 </Grid>
             </Grid>
+            
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>Descargo General</DialogTitle>
                 <DialogContent>
@@ -244,7 +170,7 @@ export const PettyCash = () => {
                         value={dialogValues.responsible}
                         onChange={(e) => handleDialogChange("responsible", e.target.value)}
                     />
-                     <TextField
+                    <TextField
                         label="usuario"
                         type="text"
                         fullWidth
@@ -262,6 +188,7 @@ export const PettyCash = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
             <Dialog open={openConfirmationDialog} onClose={handleCloseConfirmationDialog}>
                 <DialogTitle>Confirmación Final</DialogTitle>
                 <DialogContent>

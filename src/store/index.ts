@@ -11,4 +11,5 @@ export * from './Dasboard/dashboardSlice';
 export * from './UserRequest/userSlice';
 export * from './UserStore/storeSlice';
 export * from './PettyCash/petty_cashSlice';
+export * from './PettyCash/note_petty_cashSilice';
 export * from './store';

@@ -6,6 +6,7 @@ export const groupSlice = createSlice({
     initialState: {
         selectgroups: <GroupModel[] | null>null,
         allGroups: <GroupModel[] | null>null,
+        listGroups: <any[] | null>null,
         allgroupsWithMaterial: [],
         flag: false
     },
@@ -17,10 +18,13 @@ export const groupSlice = createSlice({
         setAllGroup: (state, action) => {
             state.allGroups = action.payload.allGroups
         },
+        setListGroup: (state, action) => {
+            state.listGroups = action.payload.listGroups
+        },
         setGroupMaterial: (state, action) => {
             state.allgroupsWithMaterial = action.payload.allgroupsWithMaterial
         }
     }
 });
 
-export const { setGroup, setGroupMaterial, setAllGroup } = groupSlice.actions;
+export const { setGroup, setGroupMaterial, setAllGroup, setListGroup } = groupSlice.actions;

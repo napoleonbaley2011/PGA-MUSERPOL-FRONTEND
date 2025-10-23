@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { authSlice, supplierSlice, classifierSlice, groupSlice, materialSlice, note_entrySlice, typeSlice, note_requestSLice, report_kardexSlice, dashboardSlice, userSlice, petty_cashSlice } from '.';
+import { authSlice, supplierSlice, classifierSlice, groupSlice, materialSlice, note_entrySlice, typeSlice, note_requestSLice, report_kardexSlice, dashboardSlice, userSlice, petty_cashSlice, note_petty_cashSlice } from '.';
 import { storeSlice } from './UserStore/storeSlice';
 
 export const store = configureStore({
@@ -17,6 +17,8 @@ export const store = configureStore({
     user_requests: userSlice.reducer,
     user_stores: storeSlice.reducer,
     petty_cashes: petty_cashSlice.reducer,
+    note_petty_cashes: note_petty_cashSlice.reducer,
+    listGroups:groupSlice.reducer
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({
     serializableCheck: false
