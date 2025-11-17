@@ -37,7 +37,7 @@ const stableRowKey = (itemId: number | undefined, p: Product, idx: number) =>
     p.product_id != null ? `pid-${p.product_id}` : `note-${itemId ?? "x"}-row-${idx}`;
 
 export const ViewPettyCash = ({ open, onClose, item }: PettyCashDialogProps) => {
-    const { listGroups, getListGroup, sendGroupProduct } = usePettyCash();
+    const { listGroups, getListGroup, sendGroupProduct, getDataPettyCash } = usePettyCash();
 
     const [isApproving, setIsApproving] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -104,6 +104,7 @@ export const ViewPettyCash = ({ open, onClose, item }: PettyCashDialogProps) => 
             const payload = { notePettyCashId: item.id, items };
             console.log("Payload listo:", payload);
             await sendGroupProduct(payload);
+            await getDataPettyCash();
              onClose(); 
         } catch (err) {
             console.error(err);

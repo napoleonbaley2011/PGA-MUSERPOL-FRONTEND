@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { coffeApi } from "../services";
-import { setPettyCash, setProduct, refreshPettyCash, setNotePettyCash, setListGroup, refreshNotePettyCash } from "../store";
+import { setPettyCash, refreshPettyCash, setNotePettyCash, setListGroup, refreshNotePettyCash, setTypeCancellations } from "../store";
 import { downloadDocument, printDocument } from "../utils/helper";
 import Swal from "sweetalert2";
 const api = coffeApi;
@@ -8,7 +8,7 @@ const api = coffeApi;
 export const usePettyCash = () => {
     const { petty_cashes, products, flag } = useSelector((state: any) => state.petty_cashes);
     const { listGroups } = useSelector((state: any) => state.listGroups);
-    const { note_petty_cashes } = useSelector((state: any) => state.note_petty_cashes)
+    const { note_petty_cashes, types_cancellations } = useSelector((state: any) => state.note_petty_cashes)
     const dispatch = useDispatch();
 
     const getDataPettyCash = async () => {
@@ -23,6 +23,15 @@ export const usePettyCash = () => {
                 const message = error.response.data.detail
                 Swal.fire('Acceso denegado', message, 'warning')
             } else throw new Error('Ocurrió algun error en el backend')
+        }
+    }
+
+    const getListTypesCancellations = async () => {
+        try {
+            const { data } = await api.get('/auth/list_types_cancellations');
+            dispatch(setTypeCancellations({ types_cancellations: data }))
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -103,7 +112,7 @@ export const usePettyCash = () => {
 
     const postReloadNotePettyCashes = async (note: any) => {
         try {
-             const updatedNote = { ...note, type: false };
+            const updatedNote = { ...note, type: false };
 
             const response = await api.post('/auth/request_cancellation/', updatedNote);
             if (response.data.status) {
@@ -119,10 +128,17 @@ export const usePettyCash = () => {
         }
     }
 
-    const getProductsData = async () => {
+    const downloadAccountabilitySheet = async (startDate: string | null, endDate: string | null) => {
         try {
-            const { data } = await api.get('/auth/printAccountabilitySheet')
-            dispatch(setProduct({ products: data }))
+            const queryParams = new URLSearchParams({
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
+
+            const response = await api.get(`/auth/AccountabilitySheet?${queryParams}`, {
+                responseType: 'arraybuffer'
+            });
+            downloadDocument(response, 'Planilla_rendicion_de_cuentas.pdf');
         } catch (error: any) {
             if (error.response && error.response.status == 400) {
                 const message = error.response.data.error
@@ -134,63 +150,44 @@ export const usePettyCash = () => {
         }
     }
 
-    const PrintDiaryBook = async (action: string, id: any) => {
-        const params = new URLSearchParams({
-            idFund: id.toString(),
-        });
-        if (action == 'libroDiario') {
-            try {
-                const response = await api.get(`/auth/PrintRecordBook?${params.toString()}`, {
-                    responseType: 'arraybuffer'
-                });
-                printDocument(response);
-                return true;
-            } catch (error) {
-                console.error('Error al imprimir la nota ', error);
-            }
-        } else {
-            try {
-                const response = await api.get(`/auth/AccountabilitySheet?${params.toString()}`, {
-                    responseType: 'arraybuffer'
-                });
-                printDocument(response);
-                return true;
-            } catch (error) {
-                console.error('Error al imprimir la nota ', error);
-            }
+    const PrintDiaryBook = async (startDate: string | null, endDate: string | null) => {
+        try {
+            const queryParams = new URLSearchParams({
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
+            const response = await api.get(`/auth/PrintRecordBook?${queryParams}`, {
+                responseType: 'arraybuffer'
+            });
+            printDocument(response);
+            return true;
+        } catch (error) {
+            console.error('Error al imprimir la nota ', error);
         }
+
     }
 
-    const DownloadDiaryBook = async (action: string, id: any) => {
-        console.log(id);
-        if (action == 'libroDiario') {
-            try {
-                const response = await api.get(`/auth/PrintRecordBook/`, {
-                    responseType: 'arraybuffer'
-                });
-                downloadDocument(response, 'Libro_Diario.pdf');
-                return true;
-            } catch (error) {
-                console.error('Error al imprimir la nota ', error);
-            }
-        } else {
-            try {
-                const response = await api.get(`/auth/AccountabilitySheet/`, {
-                    responseType: 'arraybuffer'
-                });
-                downloadDocument(response, 'Planilla_de_Descargos.pdf');
-                return true;
-            } catch (error) {
-                console.error('Error al imprimir la nota ', error);
-            }
+    const DownloadDiaryBook = async (startDate: string | null, endDate: string | null) => {
+        try {
+            const queryParams = new URLSearchParams({
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
+            const response = await api.get(`/auth/PrintRecordBook?${queryParams}`, {
+                responseType: 'arraybuffer'
+            });
+            downloadDocument(response, 'Libro_Diario.pdf');
+            return true;
+        } catch (error) {
+            console.error('Error al imprimir la nota ', error);
         }
+
     }
 
-    const PaymentOrder = async (total: number, responsible: string) => {
+    const PaymentOrder = async (routeSheet: string) => {
         try {
             const params = new URLSearchParams({
-                total: total.toString(),
-                responsible,
+                routeSheet,
             });
 
 
@@ -230,16 +227,11 @@ export const usePettyCash = () => {
         }
     }
 
-    const CreateDischarge = async (balance: any, responsable: string, username: string) => {
+    const CreateDischarge = async (body: object) => {
         try {
-            const params = new URLSearchParams({
-                balance: balance.toString(),
-                responsable,
-                username,
-            });
-            await api.get(`/auth/createDischarge?${params.toString()}`);
+            await api.post('/auth/createDischarge', body);
             dispatch(refreshPettyCash());
-            Swal.fire('Gescargo Exitoso', '', 'success');
+            Swal.fire('Reposición Exitosa', '', 'success');
             return true;
         } catch (error: any) {
             if (error.response) {
@@ -263,9 +255,10 @@ export const usePettyCash = () => {
         flag,
         products,
         listGroups,
+        types_cancellations,
 
         getDataPettyCash,
-        getProductsData,
+        downloadAccountabilitySheet,
         PrintDiaryBook,
         DownloadDiaryBook,
         PaymentOrder,
@@ -278,5 +271,6 @@ export const usePettyCash = () => {
         printNoteFormVale,
         postReloadNotePettyCashes,
         getNotePettyCashesTicket,
+        getListTypesCancellations
     }
 }
