@@ -7,6 +7,8 @@ import { TablePettyCash } from "./TablePettyCash";
 import "chart.js/auto";
 import { Pie } from "react-chartjs-2";
 import { Box } from "@mui/system";
+import { CurrencyExchange, RequestPage } from "@mui/icons-material";
+import { EndManagement } from "./EndManagement";
 
 export const PettyCash = () => {
     const { petty_cashes, getDataPettyCash, CreateDischarge, DownloadDiaryBook, downloadAccountabilitySheet, PaymentOrder } = usePettyCash();
@@ -21,12 +23,13 @@ export const PettyCash = () => {
     });
 
     const [openDateRange, setOpenDateRange] = useState(false);
+    const [openDialogEnd, setOpenDialogEnd] = useState(false);
     const [endDate, setEndDate] = useState<string>("");
     const [startDate, setStartDate] = useState<string>("");
     const [selectedReport, setSelectedReport] = useState<string | null>(null);
     const [routeSheet, setRouteSheet] = useState<string>("");
     const [flowStep, setFlowStep] = useState<1 | 2>(1);
-    const [useDesignationBase, setUseDesignationBase] = useState(false);
+    const [useDesignationBase, setUseDesignationBase] = useState(true);
 
 
     useEffect(() => {
@@ -37,8 +40,9 @@ export const PettyCash = () => {
         return <Typography variant="h6">Cargando datos de caja chica...</Typography>;
     }
 
-    const { name_responsibility, amount, balance, discharges, percentages, has_no_reception_date, designation } = petty_cashes.dataPettyCash;
+    const { name_responsibility, amount, balance, discharges, percentages, has_no_reception_date, designation, disabledEndManagement } = petty_cashes.dataPettyCash;
 
+    const numNew = designation - balance;
 
     const handleCloseDialog = () => setOpenDialog(false);
     const handleCloseDialogRange = () => setOpenDateRange(false);
@@ -90,16 +94,23 @@ export const PettyCash = () => {
                     return;
                 }
                 await PaymentOrder(routeSheet);
+                await getDataPettyCash();
                 setOpenDateRange(false);
                 setAnchorEl(null);
                 setSelectedReport(null);
                 setFlowStep(1);
                 setRouteSheet("");
-                await getDataPettyCash();
                 return;
             }
         }
     };
+
+    const handleDialogEndManagement = () => {
+        setOpenDialogEnd(true);
+    }
+
+    const handleCloseEnd = () => { setOpenDialogEnd(false); };
+
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -137,10 +148,12 @@ export const PettyCash = () => {
     };
 
     const designationNum = Number(designation ?? 0);
+
     const pctByAmount = {
         gastos: percentages.discharges,
         saldo: percentages.balance
     };
+
     const pctByDesignation = designationNum > 0
         ? {
 
@@ -198,10 +211,10 @@ export const PettyCash = () => {
                             direction="row"
                             alignItems="center"
                             justifyContent="space-between"
-                            sx={{ p: 2, pb: 0 }}
+                            sx={{ p: 3, pb: 0 }}
                         >
                             <Typography variant="h6">Datos de Caja Chica</Typography>
-                            <Stack direction="row" spacing={1}>
+                            <Stack direction="row" spacing={2}>
                                 <Tooltip title="Realizar Reposición de fondos">
                                     <Button
                                         variant="contained"
@@ -213,7 +226,7 @@ export const PettyCash = () => {
                                     </Button>
                                 </Tooltip>
                                 <Tooltip title="Seleccionar el reporte">
-                                    <Button variant="contained" onClick={handleOpenMenu}>
+                                    <Button variant="contained" startIcon={<RequestPage />} onClick={handleOpenMenu}>
                                         Reportes
                                     </Button>
                                 </Tooltip>
@@ -233,7 +246,15 @@ export const PettyCash = () => {
                                         Planilla de Rendición de Cuentas + Orden de Pago
                                     </MenuItem>
                                 </Menu>
-
+                                <Tooltip title="Realizar Cierre de Gestión ">
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<CurrencyExchange />}
+                                        onClick={handleDialogEndManagement}
+                                    >
+                                        CIERRE DE GESTIÓN
+                                    </Button>
+                                </Tooltip>
                             </Stack>
                         </Stack>
 
@@ -311,7 +332,7 @@ export const PettyCash = () => {
                                     />
                                 </Box>
 
-                                {percentages.discharges >= 70 && (
+                                {pctByDesignation.gastos >= 70 && (
                                     <Typography
                                         variant="body2"
                                         color="error"
@@ -334,17 +355,50 @@ export const PettyCash = () => {
                             <Stack spacing={2}>
                                 <AnalyticCardPetty
                                     title="Saldo Inicial + Repocisiones de Caja Chica"
-                                    count={amount}
+                                    count={Number(
+                                        amount
+                                    ).toLocaleString(
+                                        "es-BO",
+                                        {
+                                            minimumFractionDigits: 2
+                                        }
+                                    )}
                                     extra={"2"}
                                 />
                                 <AnalyticCardPetty
                                     title="Gastos con Caja Chica"
-                                    count={discharges}
+                                    count={Number(
+                                        discharges
+                                    ).toLocaleString(
+                                        "es-BO",
+                                        {
+                                            minimumFractionDigits: 2
+                                        }
+                                    )}
                                     extra={"2"}
                                 />
                                 <AnalyticCardPetty
                                     title="Saldo Final de Caja Chica"
-                                    count={balance}
+                                    count={Number(
+                                        balance
+                                    ).toLocaleString(
+                                        "es-BO",
+                                        {
+                                            minimumFractionDigits: 2
+                                        }
+                                    )}
+                                    extra={"2"}
+                                />
+                                <AnalyticCardPetty
+                                    title="Solicitar Reposción con el monto"
+                                    count={Number(
+                                        numNew
+                                    ).toLocaleString(
+                                        "es-BO",
+                                        {
+                                            minimumFractionDigits: 2
+                                        }
+                                    )}
                                     extra={"2"}
                                 />
                             </Stack>
@@ -526,6 +580,8 @@ export const PettyCash = () => {
                 </DialogActions>
 
             </Dialog>
+
+            <EndManagement open={openDialogEnd} location={disabledEndManagement} onClose={handleCloseEnd} />
         </>
     );
 };

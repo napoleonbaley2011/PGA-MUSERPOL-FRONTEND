@@ -167,14 +167,28 @@ export const TablePettyCash = () => {
                                                     </IconButton>
                                                 )}
                                                 {note.state === 'Finalizado' && (
-                                                    <IconButton sx={{ p: 2 }} onClick={() => printNoteFormVale(note)} aria-label="imprimir">
-                                                        <Print color="info" />
-                                                    </IconButton>
-                                                )}
-                                                {note.state === 'Finalizado' && (
-                                                    <IconButton sx={{ p: 2 }} onClick={() => printNoteFormDischarge(note)} aria-label="otro print">
-                                                        <Print color="error" />
-                                                    </IconButton>
+                                                    <Stack direction="column" spacing={1} sx={{ width: "150px" }}>
+                                                        <Button
+                                                            variant="contained"
+                                                            size="small"
+                                                            startIcon={<Print />}
+                                                            onClick={() => printNoteFormVale(note)}
+                                                            sx={{ fontSize: "0.65rem", textTransform: "none" }}
+                                                        >
+                                                            Formulario Vale
+                                                        </Button>
+
+                                                        <Button
+                                                            variant="contained"
+                                                            color="info"
+                                                            size="small"
+                                                            startIcon={<Print />}
+                                                            onClick={() => printNoteFormDischarge(note)}
+                                                            sx={{ fontSize: "0.65rem", textTransform: "none" }}
+                                                        >
+                                                            Formulario Descargo
+                                                        </Button>
+                                                    </Stack>
                                                 )}
                                                 {!note.request_date && (
                                                     <IconButton
@@ -246,7 +260,7 @@ export const TablePettyCash = () => {
                                 <TableCell sx={{ fontWeight: "bold" }}>Ida</TableCell>
                                 <TableCell sx={{ fontWeight: "bold" }}>Vuelta</TableCell>
                                 <TableCell sx={{ fontWeight: "bold" }}>Costo</TableCell>
-                              
+
                             </TableRow>
                         </TableHead>
 
@@ -270,7 +284,7 @@ export const TablePettyCash = () => {
                                         <TableCell>{t?.from ?? "-"}</TableCell>
                                         <TableCell>{t?.to ?? "-"}</TableCell>
                                         <TableCell>{t?.cost ?? 0}</TableCell>
-                                      
+
                                     </TableRow>
                                 );
                             })}

@@ -1,12 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { coffeApi } from "../services";
-import { setPettyCash, refreshPettyCash, setNotePettyCash, setListGroup, refreshNotePettyCash, setTypeCancellations } from "../store";
+import { setPettyCash, refreshPettyCash, setNotePettyCash, setListGroup, refreshNotePettyCash, setTypeCancellations, setFund } from "../store";
 import { downloadDocument, printDocument } from "../utils/helper";
 import Swal from "sweetalert2";
 const api = coffeApi;
 
 export const usePettyCash = () => {
-    const { petty_cashes, products, flag } = useSelector((state: any) => state.petty_cashes);
+    const { petty_cashes, funds, products, flag } = useSelector((state: any) => state.petty_cashes);
     const { listGroups } = useSelector((state: any) => state.listGroups);
     const { note_petty_cashes, types_cancellations } = useSelector((state: any) => state.note_petty_cashes)
     const dispatch = useDispatch();
@@ -25,6 +25,54 @@ export const usePettyCash = () => {
             } else throw new Error('Ocurrió algun error en el backend')
         }
     }
+
+    const getFunds = async () => {
+        try {
+            const { data } = await api.get('/auth/list_funds')
+            dispatch(setFund({ funds: data.data }))
+        } catch (error: any) {
+            if (error.response && error.response.status == 400) {
+                const message = error.response.data.error
+                Swal.fire('Error', message, 'error')
+            } else if (error.response && error.response.status == 403) {
+                const message = error.response.data.detail
+                Swal.fire('Acceso denegado', message, 'warning')
+            } else throw new Error('Ocurrió algun error en el backend')
+        }
+
+    }
+
+    const postEndManagement = async (body: object) => {
+        try {
+            const response = await api.post('/auth/endManagement/', body);
+            if (response.data.status) {
+                Swal.fire('Cierre de Gestión Exitosa', response.data.message, 'success');
+            } else {
+                Swal.fire('Error', response.data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error al procesar la solicitud:', error);
+            Swal.fire('Error', 'Ocurrió un error al procesar la solicitud', 'error');
+            return false;
+        }
+    }
+
+     const postNewManagement = async (body: object) => {
+        try {
+            const response = await api.post('/auth/NewManagementPettyCash/', body);
+            if (response.data.status) {
+                Swal.fire('Nueva Asignación exitosa', response.data.message, 'success');
+            } else {
+                Swal.fire('Error', response.data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error al procesar la solicitud:', error);
+            Swal.fire('Error', 'Ocurrió un error al procesar la solicitud', 'error');
+            return false;
+        }
+    }
+
+    
 
     const getListTypesCancellations = async () => {
         try {
@@ -256,6 +304,7 @@ export const usePettyCash = () => {
         products,
         listGroups,
         types_cancellations,
+        funds,
 
         getDataPettyCash,
         downloadAccountabilitySheet,
@@ -271,6 +320,9 @@ export const usePettyCash = () => {
         printNoteFormVale,
         postReloadNotePettyCashes,
         getNotePettyCashesTicket,
-        getListTypesCancellations
+        getListTypesCancellations,
+        getFunds,
+        postEndManagement,
+        postNewManagement
     }
 }
