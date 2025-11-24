@@ -10,8 +10,20 @@ import { Box } from "@mui/system";
 import { CurrencyExchange, RequestPage } from "@mui/icons-material";
 import { EndManagement } from "./EndManagement";
 
+type SelectedReport = "libro-diario" | "libro-de-registro-diario" | "planilla-orden" | null;
+type FlowStep = 1 | 2;
+
 export const PettyCash = () => {
-    const { petty_cashes, getDataPettyCash, CreateDischarge, DownloadDiaryBook, downloadAccountabilitySheet, PaymentOrder } = usePettyCash();
+    const {
+        petty_cashes,
+        getDataPettyCash,
+        CreateDischarge,
+        DownloadDiaryBook,
+        downloadAccountabilitySheet,
+        PaymentOrder,
+        DownloadListRecordBook
+    } = usePettyCash();
+
     const [openDialog, setOpenDialog] = useState(false);
     const [openConfirmationDialog, setOpenConfirmationDialog] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -26,97 +38,68 @@ export const PettyCash = () => {
     const [openDialogEnd, setOpenDialogEnd] = useState(false);
     const [endDate, setEndDate] = useState<string>("");
     const [startDate, setStartDate] = useState<string>("");
-    const [selectedReport, setSelectedReport] = useState<string | null>(null);
+    const [selectedReport, setSelectedReport] = useState<SelectedReport>(null);
     const [routeSheet, setRouteSheet] = useState<string>("");
-    const [flowStep, setFlowStep] = useState<1 | 2>(1);
+    const [flowStep, setFlowStep] = useState<FlowStep>(1);
     const [useDesignationBase, setUseDesignationBase] = useState(true);
-
 
     useEffect(() => {
         getDataPettyCash();
-    }, []);
+    }, [getDataPettyCash]);
 
     if (!petty_cashes || !petty_cashes.dataPettyCash) {
         return <Typography variant="h6">Cargando datos de caja chica...</Typography>;
     }
 
-    const { name_responsibility, amount, balance, discharges, percentages, has_no_reception_date, designation, disabledEndManagement } = petty_cashes.dataPettyCash;
+    const {
+        name_responsibility,
+        amount,
+        balance,
+        discharges,
+        percentages,
+        has_no_reception_date,
+        designation,
+        disabledEndManagement,
+        amount_replacement
+    } = petty_cashes.dataPettyCash;
 
     const numNew = designation - balance;
 
     const handleCloseDialog = () => setOpenDialog(false);
     const handleCloseDialogRange = () => setOpenDateRange(false);
-    const handleDialogChange = (
-        field: keyof typeof dialogValues,
-        value: string
-    ) => {
+    const handleCloseConfirmationDialog = () => setOpenConfirmationDialog(false);
+    const handleDialogEndManagement = () => setOpenDialogEnd(true);
+    const handleCloseEnd = () => setOpenDialogEnd(false);
+
+    const handleDialogChange = (field: keyof typeof dialogValues, value: string) => {
         setDialogValues((prevValues) => ({ ...prevValues, [field]: value }));
     };
+
     const handleConfirmDialog = () => {
         setOpenDialog(false);
         setOpenConfirmationDialog(true);
     };
-    const handleCloseConfirmationDialog = () => setOpenConfirmationDialog(false);
+
     const handleFinalConfirm = async () => {
         const payload = {
             name_responsibility: dialogValues.responsible || name_responsibility,
             discharges: Number(dialogValues.amount_replacement || 0)
         };
+
         await CreateDischarge(payload);
         await getDataPettyCash();
         setOpenDialog(false);
         setOpenConfirmationDialog(false);
     };
-    const handleDownloadReport = async () => {
-        if (!selectedReport) return;
-
-        if (selectedReport === "libro-diario") {
-            await DownloadDiaryBook(startDate, endDate);
-            setOpenDateRange(false);
-            setAnchorEl(null);
-            return;
-        }
-        if (selectedReport === "planilla-orden") {
-            if (!endDate) {
-                console.warn("Debe seleccionar una fecha de fin.");
-                return;
-            }
-
-            if (flowStep === 1) {
-                await downloadAccountabilitySheet(startDate, endDate);
-                setFlowStep(2);
-                return;
-            }
-
-            if (flowStep === 2) {
-                if (!routeSheet) {
-                    console.warn("Debe ingresar la Hoja de Ruta.");
-                    return;
-                }
-                await PaymentOrder(routeSheet);
-                await getDataPettyCash();
-                setOpenDateRange(false);
-                setAnchorEl(null);
-                setSelectedReport(null);
-                setFlowStep(1);
-                setRouteSheet("");
-                return;
-            }
-        }
-    };
-
-    const handleDialogEndManagement = () => {
-        setOpenDialogEnd(true);
-    }
-
-    const handleCloseEnd = () => { setOpenDialogEnd(false); };
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
+
     const handleCloseMenu = () => {
         setAnchorEl(null);
     };
+
     const handleDialogRep = () => {
         setDialogValues({
             amount_replacement: String(discharges ?? ""),
@@ -125,13 +108,9 @@ export const PettyCash = () => {
         });
         setOpenDialog(true);
     };
-    const handleSelectReport = (reportType: string) => {
 
-        if (
-            reportType === "planilla-orden" &&
-            has_no_reception_date
-        ) {
-
+    const handleSelectReport = (reportType: SelectedReport) => {
+        if (reportType === "planilla-orden" && has_no_reception_date) {
             console.warn(
                 "No se puede generar Planilla ni Orden de pago sin fecha de recepción del fondo."
             );
@@ -147,6 +126,54 @@ export const PettyCash = () => {
         setAnchorEl(null);
     };
 
+    const handleDownloadReport = async () => {
+        if (!selectedReport) return;
+
+        if (selectedReport === "libro-diario") {
+            await DownloadDiaryBook(startDate, endDate);
+            setOpenDateRange(false);
+            setAnchorEl(null);
+            return;
+        }
+
+        if (selectedReport === "libro-de-registro-diario") {
+            await DownloadListRecordBook(startDate, endDate);
+            setOpenDateRange(false);
+            setAnchorEl(null);
+            return;
+        }
+
+        if (selectedReport === "planilla-orden") {
+            if (!endDate) {
+                console.warn("Debe seleccionar una fecha de fin.");
+                return;
+            }
+
+            if (flowStep === 1) {
+                await downloadAccountabilitySheet(startDate, endDate);
+                setFlowStep(2);
+                return;
+            }
+
+            if (flowStep === 2) {
+                if (!routeSheet.trim()) {
+                    console.warn("Debe ingresar la Hoja de Ruta.");
+                    return;
+                }
+
+                await PaymentOrder(routeSheet);
+                await getDataPettyCash();
+
+                setOpenDateRange(false);
+                setAnchorEl(null);
+                setSelectedReport(null);
+                setFlowStep(1);
+                setRouteSheet("");
+            }
+        }
+    };
+
+
     const designationNum = Number(designation ?? 0);
 
     const pctByAmount = {
@@ -154,18 +181,16 @@ export const PettyCash = () => {
         saldo: percentages.balance
     };
 
-    const pctByDesignation = designationNum > 0
-        ? {
-
-            gastos:
-                percentages.discharges_vs_designation,
-            saldo:
-                percentages.balance_vs_designation,
-        }
-        : {
-            gastos: 0,
-            saldo: 0
-        };
+    const pctByDesignation =
+        designationNum > 0
+            ? {
+                gastos: percentages.discharges_vs_designation,
+                saldo: percentages.balance_vs_designation
+            }
+            : {
+                gastos: 0,
+                saldo: 0
+            };
 
     const currentPct = useDesignationBase ? pctByDesignation : pctByAmount;
 
@@ -192,11 +217,11 @@ export const PettyCash = () => {
         maintainAspectRatio: false
     };
 
-
-
     const isLibro = selectedReport === "libro-diario";
+    const isLibroDiary = selectedReport === "libro-de-registro-diario";
     const isFlowPlanillaOrden = selectedReport === "planilla-orden";
 
+    const showRangeHelpText = isLibro || isLibroDiary;
 
     return (
         <>
@@ -219,40 +244,68 @@ export const PettyCash = () => {
                                     <Button
                                         variant="contained"
                                         startIcon={<AddIcon />}
-                                        disabled={!petty_cashes.dataPettyCash.has_no_reception_date}
+                                        disabled={!has_no_reception_date}
                                         onClick={handleDialogRep}
                                     >
                                         REPOSICIÓN DE FONDOS
                                     </Button>
                                 </Tooltip>
+
                                 <Tooltip title="Seleccionar el reporte">
-                                    <Button variant="contained" startIcon={<RequestPage />} onClick={handleOpenMenu}>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<RequestPage />}
+                                        onClick={handleOpenMenu}
+                                    >
                                         Reportes
                                     </Button>
                                 </Tooltip>
+
                                 <Menu
                                     anchorEl={anchorEl}
                                     open={Boolean(anchorEl)}
                                     onClose={handleCloseMenu}
                                 >
-                                    <MenuItem onClick={() => handleSelectReport("libro-diario")}>
+                                    <MenuItem
+                                        onClick={() =>
+                                            handleSelectReport("libro-de-registro-diario")
+                                        }
+                                    >
+                                        Libro de registros diarios
+                                    </MenuItem>
+
+                                    <MenuItem
+                                        onClick={() => handleSelectReport("libro-diario")}
+                                    >
                                         Libro de registros finalizados
                                     </MenuItem>
 
                                     <MenuItem
                                         disabled={has_no_reception_date}
-                                        onClick={() => handleSelectReport("planilla-orden")}
+                                        onClick={() =>
+                                            handleSelectReport("planilla-orden")
+                                        }
                                     >
                                         Planilla de Rendición de Cuentas + Orden de Pago
                                     </MenuItem>
                                 </Menu>
-                                <Tooltip title="Realizar Cierre de Gestión ">
+
+                                <Tooltip
+                                    title={
+                                        disabledEndManagement
+                                            ? "Realizar Apertura de Gestión"
+                                            : "Realizar Cierre de Gestión"
+                                    }
+                                >
                                     <Button
                                         variant="contained"
                                         startIcon={<CurrencyExchange />}
                                         onClick={handleDialogEndManagement}
+                                        color={disabledEndManagement ? "info" : "primary"}
                                     >
-                                        CIERRE DE GESTIÓN
+                                        {disabledEndManagement
+                                            ? "APERTURA DE GESTIÓN"
+                                            : "CIERRE DE GESTIÓN"}
                                     </Button>
                                 </Tooltip>
                             </Stack>
@@ -303,7 +356,9 @@ export const PettyCash = () => {
                                         control={
                                             <Switch
                                                 checked={useDesignationBase}
-                                                onChange={(e) => setUseDesignationBase(e.target.checked)}
+                                                onChange={(e) =>
+                                                    setUseDesignationBase(e.target.checked)
+                                                }
                                                 size="small"
                                             />
                                         }
@@ -350,56 +405,35 @@ export const PettyCash = () => {
                             </Paper>
                         </Grid>
 
-
                         <Grid item xs={12} md={6}>
                             <Stack spacing={2}>
                                 <AnalyticCardPetty
                                     title="Saldo Inicial + Repocisiones de Caja Chica"
-                                    count={Number(
-                                        amount
-                                    ).toLocaleString(
-                                        "es-BO",
-                                        {
-                                            minimumFractionDigits: 2
-                                        }
-                                    )}
-                                    extra={"2"}
+                                    count={Number(amount).toLocaleString("es-BO", {
+                                        minimumFractionDigits: 2
+                                    })}
+                                    extra="2"
                                 />
                                 <AnalyticCardPetty
                                     title="Gastos con Caja Chica"
-                                    count={Number(
-                                        discharges
-                                    ).toLocaleString(
-                                        "es-BO",
-                                        {
-                                            minimumFractionDigits: 2
-                                        }
-                                    )}
-                                    extra={"2"}
+                                    count={Number(discharges).toLocaleString("es-BO", {
+                                        minimumFractionDigits: 2
+                                    })}
+                                    extra="2"
                                 />
                                 <AnalyticCardPetty
                                     title="Saldo Final de Caja Chica"
-                                    count={Number(
-                                        balance
-                                    ).toLocaleString(
-                                        "es-BO",
-                                        {
-                                            minimumFractionDigits: 2
-                                        }
-                                    )}
-                                    extra={"2"}
+                                    count={Number(balance).toLocaleString("es-BO", {
+                                        minimumFractionDigits: 2
+                                    })}
+                                    extra="2"
                                 />
                                 <AnalyticCardPetty
                                     title="Solicitar Reposción con el monto"
-                                    count={Number(
-                                        numNew
-                                    ).toLocaleString(
-                                        "es-BO",
-                                        {
-                                            minimumFractionDigits: 2
-                                        }
-                                    )}
-                                    extra={"2"}
+                                    count={Number(numNew).toLocaleString("es-BO", {
+                                        minimumFractionDigits: 2
+                                    })}
+                                    extra="2"
                                 />
                             </Stack>
                         </Grid>
@@ -422,11 +456,8 @@ export const PettyCash = () => {
                         type="text"
                         fullWidth
                         margin="dense"
-                        value={petty_cashes.dataPettyCash.amount_replacement}
+                        value={amount_replacement}
                         disabled
-                        onChange={(e) =>
-                            handleDialogChange("amount_replacement", e.target.value)
-                        }
                     />
                     <TextField
                         label="Responsable"
@@ -456,11 +487,10 @@ export const PettyCash = () => {
                 <DialogTitle>Confirmación Final</DialogTitle>
                 <DialogContent>
                     <Typography>
-                        ¿Está seguro de realizar esta acción con los siguientes
-                        datos?
+                        ¿Está seguro de realizar esta acción con los siguientes datos?
                     </Typography>
                     <Typography>
-                        <strong>Saldo Inicial:</strong> {petty_cashes.dataPettyCash.amount_replacement}
+                        <strong>Saldo Inicial:</strong> {amount_replacement}
                     </Typography>
                     <Typography>
                         <strong>Responsable:</strong> {dialogValues.responsible}
@@ -482,6 +512,7 @@ export const PettyCash = () => {
             <Dialog open={openDateRange} onClose={handleCloseDialogRange}>
                 <DialogTitle>
                     {isLibro && "Seleccione las fechas para generar el Reporte"}
+                    {isLibroDiary && "Seleccione las fechas para generar el Reporte"}
                     {isFlowPlanillaOrden &&
                         (flowStep === 1
                             ? "Generar Planilla de Rendición de Cuentas"
@@ -489,19 +520,16 @@ export const PettyCash = () => {
                 </DialogTitle>
                 <DialogContent>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                        {isLibro &&
+                        {showRangeHelpText &&
                             "Indique la fecha de inicio y la fecha de fin para listar los registros finalizados en ese rango."}
-
                         {isFlowPlanillaOrden && flowStep === 1 &&
                             "Indique la fecha de fin. Se generará la planilla de rendición de cuentas hasta ese día. Luego podrá generar la Orden de Pago."}
-
                         {isFlowPlanillaOrden && flowStep === 2 &&
                             "Revise la fecha de fin y complete la Hoja de Ruta para generar la Orden de Pago asociada a la rendición generada."}
                     </Typography>
 
-
                     <Grid container spacing={2} alignItems="center">
-                        {isLibro && (
+                        {(isLibro || isLibroDiary) && (
                             <>
                                 <Grid item>
                                     <Typography variant="subtitle2" gutterBottom>
@@ -557,31 +585,35 @@ export const PettyCash = () => {
                                             size="small"
                                             placeholder="Ej: DAA/UA/CH-0XX/20XX"
                                             value={routeSheet}
-                                            onChange={(e) => setRouteSheet(e.target.value)}
+                                            onChange={(e) =>
+                                                setRouteSheet(e.target.value)
+                                            }
                                         />
                                     </Grid>
                                 )}
                             </>
                         )}
                     </Grid>
-
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialogRange} color="error">
                         Cancelar
                     </Button>
                     <Button onClick={handleDownloadReport} color="primary">
-                        {isLibro && "Descargar"}
+                        {(isLibro || isLibroDiary) && "Descargar"}
                         {isFlowPlanillaOrden &&
                             (flowStep === 1
                                 ? "Generar Planilla"
                                 : "Generar Orden de Pago")}
                     </Button>
                 </DialogActions>
-
             </Dialog>
 
-            <EndManagement open={openDialogEnd} location={disabledEndManagement} onClose={handleCloseEnd} />
+            <EndManagement
+                open={openDialogEnd}
+                location={disabledEndManagement}
+                onClose={handleCloseEnd}
+            />
         </>
     );
 };

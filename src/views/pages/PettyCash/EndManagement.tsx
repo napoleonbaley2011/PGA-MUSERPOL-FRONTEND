@@ -89,7 +89,7 @@ export const EndManagement = ({ open, location, onClose }: Props) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (step === 1) {
             setStep(2);
             return;
@@ -99,7 +99,7 @@ export const EndManagement = ({ open, location, onClose }: Props) => {
             const payload = {
                 discharges: Number(balance || 0)
             };
-            postEndManagement(payload);
+            await postEndManagement(payload);
             setStep(3);
             return;
         }
@@ -108,8 +108,8 @@ export const EndManagement = ({ open, location, onClose }: Props) => {
             const isValid = validateForm();
             if (!isValid) return;
             console.log("Cerrar gestión con:", formValues);
-            postNewManagement(formValues);
-
+            await postNewManagement(formValues);
+            await getDataPettyCash();
 
             handleInternalClose();
         }

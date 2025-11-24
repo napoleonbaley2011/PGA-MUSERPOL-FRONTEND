@@ -57,7 +57,7 @@ export const usePettyCash = () => {
         }
     }
 
-     const postNewManagement = async (body: object) => {
+    const postNewManagement = async (body: object) => {
         try {
             const response = await api.post('/auth/NewManagementPettyCash/', body);
             if (response.data.status) {
@@ -72,7 +72,7 @@ export const usePettyCash = () => {
         }
     }
 
-    
+
 
     const getListTypesCancellations = async () => {
         try {
@@ -232,6 +232,24 @@ export const usePettyCash = () => {
 
     }
 
+
+    const DownloadListRecordBook = async (startDate: string | null, endDate: string | null) => {
+        try {
+            const queryParams = new URLSearchParams({
+                start_date: startDate || '',
+                end_date: endDate || ''
+            });
+            const response = await api.get(`/auth/listActivityRecord?${queryParams}`, {
+                responseType: 'arraybuffer'
+            });
+            downloadDocument(response, 'Lista_diaria_de_actividades.pdf');
+            return true;
+        } catch (error) {
+            console.error('Error al imprimir la nota ', error);
+        }
+
+    }
+
     const PaymentOrder = async (routeSheet: string) => {
         try {
             const params = new URLSearchParams({
@@ -323,6 +341,7 @@ export const usePettyCash = () => {
         getListTypesCancellations,
         getFunds,
         postEndManagement,
-        postNewManagement
+        postNewManagement,
+        DownloadListRecordBook
     }
 }
