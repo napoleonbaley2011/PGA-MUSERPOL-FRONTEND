@@ -45,7 +45,7 @@ export const PettyCash = () => {
 
     useEffect(() => {
         getDataPettyCash();
-    }, [getDataPettyCash]);
+    }, []);
 
     if (!petty_cashes || !petty_cashes.dataPettyCash) {
         return <Typography variant="h6">Cargando datos de caja chica...</Typography>;

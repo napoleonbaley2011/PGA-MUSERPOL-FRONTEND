@@ -142,6 +142,22 @@ export const usePettyCash = () => {
         }
     }
 
+
+    const printNoteFormDischargeTrasnport = async (note: any) => {
+        console.log("ssssss");
+        try {
+            const noteId = note.id_note || note.id;
+            const response = await api.get(`/auth/print_Petty_Cash_discharge_trasnport/${noteId}/`, {
+                responseType: 'arraybuffer',
+            });
+            printDocument(response)
+            return true
+
+        } catch (error) {
+            console.error('Error al imprimir la nota de entrada:', error);
+        }
+    }
+
     const postDeliveyOfResources = async (note: any) => {
         try {
             const response = await api.post('/auth/postDeliveyOfResources/', note);
@@ -342,6 +358,7 @@ export const usePettyCash = () => {
         getFunds,
         postEndManagement,
         postNewManagement,
-        DownloadListRecordBook
+        DownloadListRecordBook,
+        printNoteFormDischargeTrasnport
     }
 }

@@ -36,7 +36,7 @@ export const TablePettyCash = () => {
     const [isConfirming, setIsConfirming] = useState(false);
     const [selectedReason, setSelectedReason] = useState<number | ''>('');
 
-    const { note_petty_cashes, flag, types_cancellations, getNotePettyCashes, postDeliveyOfResources, postReloadNotePettyCashes, printNoteFormDischarge, printNoteFormVale, getListTypesCancellations, getDataPettyCash } = usePettyCash();
+    const { note_petty_cashes, flag, types_cancellations, getNotePettyCashes, postDeliveyOfResources, postReloadNotePettyCashes, printNoteFormDischarge, printNoteFormVale, getListTypesCancellations, getDataPettyCash, printNoteFormDischargeTrasnport } = usePettyCash();
     const [page, setPage] = useState(0);
     const [total, setTotal] = useState(0);
     const [previousCount, setPreviousCount] = useState(0);
@@ -67,6 +67,7 @@ export const TablePettyCash = () => {
     const handleClose = () => { setOpenDialog(false); setSelectedNote(null); };
 
     const openConfirmDialog = (note: any) => {
+        console.log(note);
         setNoteToConfirm(note);
         setOpenConfirm(true);
     };
@@ -117,7 +118,7 @@ export const TablePettyCash = () => {
     };
 
     const hasError = !selectedReason;
-
+    console.log(note_petty_cashes);
     return (
         <>
             <TableContainer component={Paper}>
@@ -156,60 +157,79 @@ export const TablePettyCash = () => {
                                         <StyledBodyCell align="left">{note.delivery_date ?? '-'}</StyledBodyCell>
                                         <StyledBodyCell align="left">
                                             <Stack alignContent="center" direction="row">
-                                                {note.state === 'Aceptado' && (
-                                                    <IconButton sx={{ p: 2 }} onClick={() => handleOpen(note)} aria-label="ver nota">
-                                                        <CheckCircle color="success" />
-                                                    </IconButton>
-                                                )}
-                                                {note.state === 'En Proceso' && (
-                                                    <IconButton sx={{ p: 2 }} onClick={() => openConfirmDialogCancell(note)} aria-label="ver nota">
-                                                        <Cancel color="error" />
-                                                    </IconButton>
-                                                )}
-                                                {note.state === 'Finalizado' && (
+                                                {(note.state === "Finalizado" && note.type_cash_id === 3) && (
                                                     <Stack direction="column" spacing={1} sx={{ width: "150px" }}>
-                                                        <Button
-                                                            variant="contained"
-                                                            size="small"
-                                                            startIcon={<Print />}
-                                                            onClick={() => printNoteFormVale(note)}
-                                                            sx={{ fontSize: "0.65rem", textTransform: "none" }}
-                                                        >
-                                                            Formulario Vale
-                                                        </Button>
-
                                                         <Button
                                                             variant="contained"
                                                             color="info"
                                                             size="small"
                                                             startIcon={<Print />}
-                                                            onClick={() => printNoteFormDischarge(note)}
+                                                            onClick={() => printNoteFormDischargeTrasnport(note)}
                                                             sx={{ fontSize: "0.65rem", textTransform: "none" }}
                                                         >
-                                                            Formulario Descargo
+                                                            Formulario Descargo (Transporte)
                                                         </Button>
                                                     </Stack>
                                                 )}
-                                                {!note.request_date && (
-                                                    <IconButton
-                                                        sx={{ p: 2 }}
-                                                        onClick={() => openConfirmDialog(note)}
-                                                        aria-label="confirmar entrega"
-                                                    >
-                                                        <CheckCircle color="info" />
-                                                    </IconButton>
+                                                {!(note.state === "Finalizado" && note.type_cash_id === 3) && (
+                                                    <>
+                                                        {note.state === 'Aceptado' && (
+                                                            <IconButton sx={{ p: 2 }} onClick={() => handleOpen(note)} aria-label="ver nota">
+                                                                <CheckCircle color="success" />
+                                                            </IconButton>
+                                                        )}
 
-                                                )}
+                                                        {note.state === 'En Proceso' && (
+                                                            <IconButton sx={{ p: 2 }} onClick={() => openConfirmDialogCancell(note)} aria-label="ver nota">
+                                                                <Cancel color="error" />
+                                                            </IconButton>
+                                                        )}
 
-                                                {(note.state !== 'Finalizado') && (
-                                                    <IconButton
-                                                        sx={{ p: 2 }}
-                                                        onClick={() => openConfirmDialogCancell(note)}
-                                                        aria-label="Anular"
-                                                    >
-                                                        <Cancel color="error" />
-                                                    </IconButton>
+                                                        {note.state === 'Finalizado' && (
+                                                            <Stack direction="column" spacing={1} sx={{ width: "150px" }}>
+                                                                <Button
+                                                                    variant="contained"
+                                                                    size="small"
+                                                                    startIcon={<Print />}
+                                                                    onClick={() => printNoteFormVale(note)}
+                                                                    sx={{ fontSize: "0.65rem", textTransform: "none" }}
+                                                                >
+                                                                    Formulario Vale
+                                                                </Button>
 
+                                                                <Button
+                                                                    variant="contained"
+                                                                    color="info"
+                                                                    size="small"
+                                                                    startIcon={<Print />}
+                                                                    onClick={() => printNoteFormDischarge(note)}
+                                                                    sx={{ fontSize: "0.65rem", textTransform: "none" }}
+                                                                >
+                                                                    Formulario Descargo
+                                                                </Button>
+                                                            </Stack>
+                                                        )}
+
+                                                        {!note.request_date && (
+                                                            <IconButton
+                                                                sx={{ p: 2 }}
+                                                                onClick={() => openConfirmDialog(note)}
+                                                                aria-label="confirmar entrega"
+                                                            >
+                                                                <CheckCircle color="info" />
+                                                            </IconButton>
+                                                        )}
+
+                                                        {(note.state !== 'Finalizado') && (
+                                                            <IconButton
+                                                                sx={{ p: 2 }}
+                                                                onClick={() => openConfirmDialogCancell(note)}
+                                                                aria-label="Anular"
+                                                            >
+                                                                <Cancel color="error" />
+                                                            </IconButton>
+                                                        )}
+                                                    </>
                                                 )}
                                             </Stack>
                                         </StyledBodyCell>
