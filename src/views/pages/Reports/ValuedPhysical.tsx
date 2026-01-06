@@ -14,13 +14,13 @@ export const ValuedPhysical = () => {
     const [endDate, setEndDate] = useState('');
     const [selectedGroup, setSelectedGroup] = useState('');
     const [loading, setLoading] = useState(false);
-    const [showCollapse, setShowCollapse] = useState(false);  
+    const [showCollapse, setShowCollapse] = useState(false);
 
     const handleUpdateClick = () => {
-        setLoading(true);  
+        setLoading(true);
         (startDate && endDate ? getReportValued(startDate, endDate) : getReportValued())
-            .finally(() => setLoading(false));  
-        setShowCollapse(true);  
+            .finally(() => setLoading(false));
+        setShowCollapse(true);
     };
 
     const handlePrintClick = () => {
@@ -38,15 +38,22 @@ export const ValuedPhysical = () => {
         DownloadReportValuedExcel(startDate, endDate).finally(() => setLoading(false));
     };
 
+    const parseLocalDate = (dateString: string) => {
+        const [year, month, day] = dateString.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     const getFormattedEndDate = () => {
         const today = new Date();
-        const date = endDate ? new Date(endDate) : today;
+        const date = endDate ? parseLocalDate(endDate) : today;
+
         return date.toLocaleDateString('es-ES', {
             day: 'numeric',
             month: 'long',
             year: 'numeric'
         }).toUpperCase();
     };
+
 
     return (
         <>
@@ -145,8 +152,10 @@ export const ValuedPhysical = () => {
                         INVENTARIO FISICO VALORADO
                     </Typography>
                     <Typography align="center" gutterBottom>
-                        LA PAZ DEL {startDate ? new Date(startDate).toLocaleDateString('es-ES', {
-                            day: 'numeric', month: 'long', year: 'numeric'
+                        LA PAZ DEL {startDate ? parseLocalDate(startDate).toLocaleDateString('es-ES', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
                         }).toUpperCase() : '1 DE ENERO'} AL {getFormattedEndDate()}
                     </Typography>
                     <Typography align="center" gutterBottom>
